@@ -1,9 +1,7 @@
 package com.cs340.groupProject.repo;
 
-import com.cs340.groupProject.model.Category;
-import com.cs340.groupProject.model.Customer;
-import com.cs340.groupProject.model.Order;
-import com.cs340.groupProject.model.Product;
+import com.cs340.groupProject.model.*;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -35,7 +33,7 @@ public class GroupProjectRepository {
 
     private static final String DELETE_CATEGORY_QUERY = "DELETE FROM Categories WHERE category_id = '%s'";
 
-    private static final String GET_ORDERS_QUERY = "SELECT op.order_id, op.order_price, p.name AS product_name, o.order_date, u.name AS customer_name\n" +
+    private static final String GET_ORDERS_QUERY = "SELECT op.order_id, op.unit_price, op.quantity, p.name AS product_name, o.order_date, u.name AS customer_name\n" +
             "FROM Order_Products op\n" +
             "INNER JOIN Products p ON op.product_id = p.product_id\n" +
             "INNER JOIN Orders o ON op.order_id = o.order_id\n" +
@@ -45,6 +43,14 @@ public class GroupProjectRepository {
     private static final String GET_CUSTOMERS_QUERY = "SELECT user_id, name, email, address, phone FROM Users ORDER BY user_id;";
 
     private static final String ADD_CUSTOMER_QUERY = "insert into Users (name, email, address, phone) values ('%s', '%s', '%s', '%s')\n";
+
+    private static final String RESET_DB_PROCEDURE_CALL = "CALL CreateCompleteDatabase();";
+
+    private static final String CREATE_ORDER_PROCEDURE_CALL = "CALL create_order(%s,%s,%s);"; // input user_id, product_id, quantity
+
+    private static final String DELETE_ORDER_PROCEDURE_CALL = "CALL delete_order(%s);"; // input order_id
+
+    private static final String UPDATE_ORDER_PROCEDURE_CALL = "CALL update_order_item(%s,%s,%s,%s);"; // input order_id, old_product_id, new_product_id, quantity
 
     private final JdbcTemplate jdbc;
 
@@ -69,7 +75,7 @@ public class GroupProjectRepository {
     }
 
     public void resetDB() {
-        jdbc.execute("CALL CreateCompleteDatabase()");
+        jdbc.execute(RESET_DB_PROCEDURE_CALL);
     }
 
     public List<Product> getProducts() {
@@ -83,13 +89,16 @@ public class GroupProjectRepository {
     }
 
     public List<Order> getOrders() {
-        return jdbc.query(GET_ORDERS_QUERY, (rs, rowNum) -> new Order(
-                rs.getInt("order_id"),
-                rs.getString("customer_name"),
-                rs.getDate("order_date"),
-                rs.getDouble("order_price"),
-                rs.getString("product_name")
-        ));
+
+        return jdbc.query(GET_ORDERS_QUERY, (rs, rowNum) -> Order.builder()
+                .orderId(rs.getInt("order_id"))
+                .customer(rs.getString("customer_name"))
+                .date(rs.getDate("order_date"))
+                .orderPrice(rs.getDouble("unit_price") * rs.getInt("quantity"))
+                .productName(rs.getString("product_name"))
+                .quantity(rs.getInt("quantity"))
+                .build()
+        );
     }
 
     public List<Customer> getCustomers() {
@@ -118,5 +127,18 @@ public class GroupProjectRepository {
 
     public void deleteProduct(String id) {
         jdbc.execute(String.format(DELETE_PRODUCT_QUERY, id));
+    }
+
+    public void deleteOrder(String id) {
+        jdbc.execute(String.format(DELETE_ORDER_PROCEDURE_CALL, id));
+    }
+
+    public void createOrder(CreateOrderRequest order) {
+        jdbc.execute(String.format(CREATE_ORDER_PROCEDURE_CALL, order.getUserId(), order.getProductId(), order.getQuantity()));
+    }
+
+    public void updateOrder(UpdateOrderRequest updateOrderRequest) {
+        jdbc.execute(String.format(UPDATE_ORDER_PROCEDURE_CALL, updateOrderRequest.getOrderId(), updateOrderRequest.getOldProductId(),
+                updateOrderRequest.getNewProductId(), updateOrderRequest.getQuantity()));
     }
 }

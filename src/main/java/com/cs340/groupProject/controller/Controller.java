@@ -1,10 +1,7 @@
 package com.cs340.groupProject.controller;
 
-import com.cs340.groupProject.model.Category;
-import com.cs340.groupProject.model.Customer;
-import com.cs340.groupProject.model.Order;
-import com.cs340.groupProject.model.Product;
-import com.cs340.groupProject.repo.CategoryRequest;
+import com.cs340.groupProject.model.*;
+import com.cs340.groupProject.model.CategoryRequest;
 import com.cs340.groupProject.repo.GroupProjectRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.web.bind.annotation.*;
@@ -85,6 +82,24 @@ public class Controller {
     @PostMapping("/customers")
     public void createCustomers(@RequestBody Customer customer) {
         repo.addCustomer(customer);
+    }
+
+    @Operation(description = "Delete an order by id.")
+    @DeleteMapping("/orders/{id}")
+    public void deleteOrders(@PathVariable String id) {
+        repo.deleteOrder(id);
+    }
+
+    @Operation(description = "Create an order.")
+    @PostMapping("/orders")
+    public void createOrders(@RequestBody CreateOrderRequest order) {
+        repo.createOrder(order);
+    }
+
+    @Operation(description = "Update an order.")
+    @PutMapping("/orders")
+    public void updateOrders(@RequestBody UpdateOrderRequest updateOrderRequest) {
+        repo.updateOrder(updateOrderRequest);
     }
 
 }

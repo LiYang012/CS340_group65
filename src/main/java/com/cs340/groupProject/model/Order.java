@@ -15,5 +15,5 @@ public class Order {
     private Date date;
     private double orderPrice;
     private String productName;
-
+    private int quantity;
 }

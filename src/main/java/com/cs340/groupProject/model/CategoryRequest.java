@@ -1,4 +1,4 @@
-package com.cs340.groupProject.repo;
+package com.cs340.groupProject.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
