@@ -8,6 +8,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/*
+Citation: This file is modified from Spring boot starter code.
+ */
+
 @RestController
 @CrossOrigin(origins = {"http://localhost:7788", "http://localhost:9111", "http://127.0.0.1:5500", "http://classwork.engr.oregonstate.edu:8171", "http://classwork.engr.oregonstate.edu:7788", "http://classwork.engr.oregonstate.edu:9111"})
 public class Controller {
